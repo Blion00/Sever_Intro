@@ -5,6 +5,7 @@ const User = require('./User');
 const Bill = require('./Bill');
 const Report = require('./Report');
 const News = require('./News');
+const PricingTier = require('./PricingTier');
 
 // Define associations
 User.hasMany(Bill, { 
@@ -54,6 +55,7 @@ module.exports = {
   Bill,
   Report,
   News,
+  PricingTier,
   syncDatabase,
   testConnection
 };

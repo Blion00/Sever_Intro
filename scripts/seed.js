@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { User, News, syncDatabase } = require('../models');
+const { User, News, PricingTier, syncDatabase } = require('../models');
 
 // Sample data
 const sampleUsers = [
@@ -80,6 +80,48 @@ const sampleNews = [
   }
 ];
 
+const samplePricing = [
+  {
+    code: 'family',
+    name: 'Gói Gia đình',
+    badge: 'Phổ biến',
+    description: 'Thích hợp cho hộ gia đình 3-5 người sử dụng hằng ngày.',
+    price: 65000,
+    unit: 'mỗi bình 20L',
+    includes: [
+      'Giao trong 2 giờ tại nội thành',
+      'Cho mượn tối đa 4 vỏ miễn phí',
+      'Nhắc lịch đổi bình định kỳ qua SMS',
+    ],
+  },
+  {
+    code: 'office',
+    name: 'Gói Văn phòng',
+    badge: 'Tiết kiệm',
+    description: 'Giao định kỳ cho doanh nghiệp nhỏ và văn phòng co-working.',
+    price: 58000,
+    unit: 'mỗi bình 20L',
+    includes: [
+      'Tối thiểu 8 bình/tuần',
+      'Miễn phí thiết lập kệ và van rót',
+      'Báo cáo tiêu thụ & công nợ hàng tháng',
+    ],
+  },
+  {
+    code: 'dealer',
+    name: 'Gói Đại lý',
+    badge: 'Sỉ',
+    description: 'Dành cho đại lý phân phối, chung cư và căng-tin trường học.',
+    price: 52000,
+    unit: 'mỗi bình 20L',
+    includes: [
+      'Đơn tối thiểu 30 bình/lần',
+      'Ưu tiên giao sáng sớm & cuối ngày',
+      'Hỗ trợ vật phẩm POS và biển hiệu',
+    ],
+  },
+];
+
 async function seedDatabase() {
   try {
     // Sync database
@@ -89,6 +131,7 @@ async function seedDatabase() {
     // Clear existing data
     await User.destroy({ where: {} });
     await News.destroy({ where: {} });
+    await PricingTier.destroy({ where: {} });
     console.log('🗑️  Cleared existing data');
 
     // Create users
@@ -109,6 +152,13 @@ async function seedDatabase() {
         author: adminUser.id
       });
       console.log(`   Created news: ${news.title}`);
+    }
+
+    // Create pricing tiers
+    console.log('💧 Creating pricing tiers...');
+    for (const tier of samplePricing) {
+      await PricingTier.create(tier);
+      console.log(`   Created pricing: ${tier.name} (${tier.price.toLocaleString('vi-VN')}đ)`);
     }
 
     console.log('✅ Database seeded successfully!');

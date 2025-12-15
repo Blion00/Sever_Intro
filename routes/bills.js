@@ -6,6 +6,99 @@ const { auth, adminAuth } = require('../middleware/auth');
 
 const router = express.Router();
 
+// @route   GET /api/bills/lookup
+// @desc    Public lookup customer by phone number or customer ID
+// @access  Public
+router.get(
+  '/lookup',
+  [
+    query('identifier')
+      .notEmpty()
+      .withMessage('Identifier is required'),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          message: 'Validation failed',
+          errors: errors.array(),
+        });
+      }
+
+      const rawIdentifier = String(req.query.identifier || '').trim();
+
+      // Try match by phone (digits only)
+      const digits = rawIdentifier.replace(/\D/g, '');
+      let user = null;
+
+      if (digits.length >= 9) {
+        user = await User.findOne({
+          where: { phone: digits },
+        });
+      }
+
+      // If not found by phone, try by customerId (original string)
+      if (!user) {
+        user = await User.findOne({
+          where: { customerId: rawIdentifier },
+        });
+      }
+
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message:
+            'Thông tin không chính xác. Vui lòng kiểm tra lại số điện thoại hoặc mã khách hàng.',
+        });
+      }
+
+      // Lấy hóa đơn mới nhất của khách (nếu có)
+      let latestBill = null;
+      try {
+        latestBill = await Bill.findOne({
+          where: { customerId: user.customerId },
+          order: [['createdAt', 'DESC']],
+        });
+      } catch (billError) {
+        console.error('Fetch latest bill error:', billError);
+      }
+
+      return res.json({
+        success: true,
+        message: 'Khách hàng hợp lệ',
+        data: {
+          customer: {
+            id: user.id,
+            fullName: user.fullName,
+            phone: user.phone,
+            customerId: user.customerId,
+          },
+          bill: latestBill
+            ? {
+                id: latestBill.id,
+                billNumber: latestBill.billNumber,
+                status: latestBill.status,
+                total:
+                  latestBill.amounts && latestBill.amounts.total
+                    ? latestBill.amounts.total
+                    : 0,
+                dueDate: latestBill.dueDate,
+              }
+            : null,
+        },
+      });
+    } catch (error) {
+      console.error('Lookup customer by identifier error:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Server error',
+      });
+    }
+  }
+);
+
 // @route   GET /api/bills
 // @desc    Get bills for current user or all bills (admin)
 // @access  Private

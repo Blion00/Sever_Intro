@@ -13,16 +13,14 @@ const billRoutes = require('./routes/bills');
 const reportRoutes = require('./routes/reports');
 const newsRoutes = require('./routes/news');
 const userRoutes = require('./routes/users');
+const pricingRoutes = require('./routes/pricing');
+const paymentRoutes = require('./routes/payment');
 
 // Import middleware
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-});
 // Security middleware
 app.use(helmet());
 
@@ -58,6 +56,8 @@ app.use('/api/bills', billRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/news', newsRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/pricing', pricingRoutes);
+app.use('/api/payment', paymentRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -70,7 +70,9 @@ app.get('/', (req, res) => {
       bills: '/api/bills',
       reports: '/api/reports',
       news: '/api/news',
-      users: '/api/users'
+      users: '/api/users',
+      pricing: '/api/pricing',
+      payment: '/api/payment'
     }
   });
 });
